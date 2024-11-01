@@ -1,0 +1,28 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing default JDK..."
+      - apt-get update
+      - apt-get install -y default-jdk
+
+  build:
+    commands:
+      - echo "Building WAR file..."
+      - mkdir -p target/application
+      - cp -r application/* target/application/
+      - cd target/application
+      - jar -cvf ../myapp.war *
+      - cd ../../
+
+  post_build:
+    commands:
+      - echo "Build completed."
+      - echo "github branch:${BranchName}"
+      - echo "Source version (branch/tag):${CODEBUILD_SOURCE_VERSION}"
+      - echo "Resolved commit ID:${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+      - ls -lh target/myapp.war  # List the created WAR file
+artifacts:
+  files:
+    - target/myapp.war
