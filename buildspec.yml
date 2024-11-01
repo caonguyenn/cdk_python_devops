@@ -19,9 +19,6 @@ phases:
   post_build:
     commands:
       - echo "Build completed."
-      - echo "github branch:${BranchName}"
-      - echo "Source version (branch/tag):${CODEBUILD_SOURCE_VERSION}"
-      - echo "Resolved commit ID:${CODEBUILD_RESOLVED_SOURCE_VERSION}"
       - ls -lh target/myapp.war  # List the created WAR file
 artifacts:
   files:
