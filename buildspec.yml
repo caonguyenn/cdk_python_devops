@@ -23,3 +23,6 @@ phases:
 artifacts:
   files:
     - target/myapp.war
+    - scripts/stop_tomcat.sh
+    - scripts/start_tomcat.sh
+    - appspec.yml
