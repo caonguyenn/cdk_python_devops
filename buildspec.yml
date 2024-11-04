@@ -19,7 +19,8 @@ phases:
   post_build:
     commands:
       - echo "Build completed."
-      - ls -lh target/myapp.war  # List the created WAR file
+      - ls -lh target/myapp.war
+      - aws s3 cp target/myapp.war s3://${INSTANCE_BUCKET_NAME}/target/myapp.war
 artifacts:
   files:
     - target/myapp.war
