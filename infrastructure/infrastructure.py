@@ -143,10 +143,12 @@ class InfrastructureStack(Stack):
         userdata.add_s3_download_command(
             bucket=instance_bucket,
             bucket_key="target/myapp",   # S3 key for the file
-            local_file=" ${{TOMCAT_DIR}}/webapps/"  # Path on the EC2 instance
+            local_file="/opt/tomcat/webapps/"  # Path on the EC2 instance
         )
+        userdata.add_commands("exit 0")
 
         # Define an Auto Scaling Group
+        # [disable-awslint:ref-via-interface]
         asg = autoscaling.AutoScalingGroup(
             self, 
             "AutoScalingGroup",
@@ -176,15 +178,6 @@ class InfrastructureStack(Stack):
 
         asg.scale_on_cpu_utilization("CpuScaling", target_utilization_percent=75)
         asg.attach_to_application_target_group(target_group)
-
-        CfnOutput(self, "ASGOutput", value=asg.auto_scaling_group_name,
-            export_name=f"ASG-{Project.PROJECT_NAME}-{env}")
-        CfnOutput(self, "TargetGroupOutput", value=target_group.target_group_arn,
-            export_name=f"TGarn-{Project.PROJECT_NAME}-{env}")
-        CfnOutput(self, "LogBucketOutput", value=instance_bucket.bucket_name,
-            export_name=f"Instance-bucket-{env}")
-        CfnOutput(self, "SendingMailTopic", value=sending_mail_toppic.topic_arn,
-            export_name=f"SNS-mailsending-arn-{env}")
 
         ############################################################################################
         ## Pipeline
@@ -259,7 +252,7 @@ class InfrastructureStack(Stack):
             auto_scaling_groups=[asg],
             load_balancer=codedeploy.LoadBalancer.application(target_group),
             deployment_config=deployment_config)
-
+        
         # Deployment Stage
         deploy_action = cp_actions.CodeDeployServerDeployAction(
             action_name="Deploy",

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import aws_cdk as cdk
 from cdk_pipeline.cdk_pipeline import CDKCodepipelineStack
-from infrash_pipeline.infras_pipeline import InfrasPipelineStack
 from constants import Account
 from cdk_nag import AwsSolutionsChecks, NagSuppressions
 
@@ -14,7 +13,7 @@ if environment not in valid_environments:
 
 env=cdk.Environment(account=Account.ACCOUNT_ID, region=Account.REGION)
 
-cdk_codepipeline_stack = CDKCodepipelineStack(app, f"CDKCodepipelineStack-{environment}",
+cdk_pipeline_stack = CDKCodepipelineStack(app, f"CDKCodepipelineStack-{environment}",
     environment=environment, env=env)
 
 suppressions = [
@@ -32,7 +31,7 @@ suppressions = [
     }
 ]
 
-NagSuppressions.add_stack_suppressions(cdk_codepipeline_stack, suppressions)
+NagSuppressions.add_stack_suppressions(cdk_pipeline_stack, suppressions)
 
 cdk.Aspects.of(app).add(AwsSolutionsChecks())
 

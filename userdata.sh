@@ -26,7 +26,7 @@ chown -R ubuntu:ubuntu ${TOMCAT_DIR}
 ${TOMCAT_DIR}/bin/catalina.sh start
 
 # install codedeploy agent
-sudo apt install ruby-full
+sudo apt install -y ruby-full
 cd /home/ubuntu
 wget https://aws-codedeploy-ap-southeast-1.s3.ap-southeast-1.amazonaws.com/latest/install
 chmod +x ./install
