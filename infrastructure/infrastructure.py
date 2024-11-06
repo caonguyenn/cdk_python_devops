@@ -3,6 +3,7 @@ from aws_cdk import (
     Tags,
     RemovalPolicy,
     aws_ec2 as ec2,
+    aws_lambda as _lambda,
     aws_autoscaling as autoscaling,
     aws_elasticloadbalancingv2 as elbv2,
     aws_iam as iam,
@@ -14,7 +15,7 @@ from aws_cdk import (
     aws_codebuild as codebuild,
     aws_codedeploy as codedeploy,
     aws_kms as kms,
-    CfnOutput
+    Fn
 )
 import yaml
 from constructs import Construct
@@ -35,6 +36,12 @@ class InfrastructureStack(Stack):
             params = yaml.safe_load(file)
 
         instance_config = params.get(env)
+
+        sending_mail_toppic_arn = Fn.import_value(f"SNS-mailsending-arn-{env}")
+        sending_mail_toppic = sns.Topic.from_topic_arn(self, "ImportedSendMailTopic", sending_mail_toppic_arn)
+
+        trigger_lambda_topic_arn = Fn.import_value(f"Trigger-Lambda-topic-arn-{env}")
+        trigger_lambda_topic = sns.Topic.from_topic_arn(self, "ImportedTriggerLambdaTopic", trigger_lambda_topic_arn)
 
         # Security Group for EC2 instances and Load Balancer
         security_group = ec2.SecurityGroup.from_security_group_id(self, "SG", Network.SG_ID,
@@ -113,10 +120,6 @@ class InfrastructureStack(Stack):
 
         instance_role = iam.Role.from_role_arn(self, "InstanceRole", 
             role_arn=Roles.AmazonEC2RoleforAWSCodeDeploy)
-
-        # Create an SNS topic for Auto Scaling notifications
-        sending_mail_toppic = sns.Topic(self, "SendingEmailTopic", enforce_ssl=True)
-        sending_mail_toppic.add_subscription(subs.EmailSubscription(Email.email))
 
         # Enforce SSL for publishers
         sending_mail_toppic.add_to_resource_policy(
@@ -211,7 +214,7 @@ class InfrastructureStack(Stack):
             branch=env,
             connection_arn=Github.CONNECTION_ARN,
             output=source_output,
-            trigger_on_push=True
+            trigger_on_push=False
         )
         pipeline.add_stage(
             stage_name="Source",
@@ -272,3 +275,17 @@ class InfrastructureStack(Stack):
                 codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED
             ]
         )
+
+        # Create the Lambda function
+        trigger_pipeline_function = _lambda.Function(self, "TriggerPipelineFunction",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="trigger_code_pipeline.lambda_handler",
+            code=_lambda.Code.from_asset("lambda"),
+            environment={
+                "PIPELINE_NAME": pipeline.pipeline_name
+            },
+            role=iam.Role.from_role_arn(self, "TrggerLambdaRole", role_arn=Roles.TriggerLambdaRole)
+            )
+
+        # Subscribe the Lambda function to the SNS topic
+        trigger_lambda_topic.add_subscription(subs.LambdaSubscription(trigger_pipeline_function))
