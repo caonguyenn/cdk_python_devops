@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing default JDK..."
+      - apt-get update
+      - apt-get install -y default-jdk
+
+  build:
+    commands:
+      - echo "Building WAR file..."
+      - mkdir -p target/application
+      - cp -r application/* target/application/
+      - cd target/application
+      - jar -cvf ../myapp.war *
+      - cd ../../
+
+  post_build:
+    commands:
+      - echo "Build completed."
+      - ls -lh target/myapp.war
+      - aws s3 cp target/myapp.war s3://${INSTANCE_BUCKET_NAME}/target/myapp.war
+artifacts:
+  files:
+    - target/myapp.war
+    - scripts/stop_tomcat.sh
+    - scripts/start_tomcat.sh
+    - appspec.yml
