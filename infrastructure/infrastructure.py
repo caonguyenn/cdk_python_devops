@@ -245,7 +245,7 @@ class InfrastructureStack(Stack):
 
         # CodeDeploy Application and Deployment Group
         codedeploy_app = codedeploy.ServerApplication(self, "CodeDeployApp",
-            application_name=f"{Project.PROJECT_NAME}-DeployApplication")
+            application_name=f"{Project.PROJECT_NAME}-DeployApplication-{env}")
 
         deployment_config = codedeploy.ServerDeploymentConfig.ALL_AT_ONCE if env == "dev" else codedeploy.ServerDeploymentConfig.HALF_AT_A_TIME
 
@@ -278,6 +278,7 @@ class InfrastructureStack(Stack):
 
         # Create the Lambda function
         trigger_pipeline_function = _lambda.Function(self, "TriggerPipelineFunction",
+            function_name=f"TriggerPipelineFunction-{env}",
             runtime=_lambda.Runtime.PYTHON_3_12,
             handler="trigger_code_pipeline.lambda_handler",
             code=_lambda.Code.from_asset("lambda"),
