@@ -6,7 +6,7 @@ from cdk_nag import AwsSolutionsChecks, NagSuppressions
 
 
 app = cdk.App()
-environment = app.node.try_get_context("env") or "dev"
+environment = app.node.try_get_context("env")
 valid_environments = ["dev", "test", "prod"]
 if environment not in valid_environments:
     raise ValueError(f"Invalid environment '{environment}'. Must be one of {valid_environments}")

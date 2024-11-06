@@ -29,8 +29,10 @@ class CDKCodepipelineStack(Stack):
 
         env = environment
 
-        pipelie_sending_mail_toppic = sns.Topic(self, "PipelineSendingEmailTopic", enforce_ssl=True)
-        pipelie_sending_mail_toppic.add_subscription(subs.EmailSubscription(Email.email))
+        sending_mail_toppic = sns.Topic(self, "PipelineSendingEmailTopic", enforce_ssl=True)
+        sending_mail_toppic.add_subscription(subs.EmailSubscription(Email.email))
+
+        trigger_lambda_topic = sns.Topic(self, "TriggerLambdaTopic", enforce_ssl=True)
 
         git_input = pipelines.CodePipelineSource.connection(
             repo_string=f"{Github.OWNER}/{Github.REPO}",
@@ -60,9 +62,17 @@ class CDKCodepipelineStack(Stack):
 
         code_pipeline.notify_on(
             "FailedPipelineNotifications",
-            pipelie_sending_mail_toppic,
+            sending_mail_toppic,
             events=[
                 codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_FAILED
+            ]
+        )
+
+        code_pipeline.notify_on(
+            "SucceededPipelineNotifications",
+            trigger_lambda_topic,
+            events=[
+                codepipeline.PipelineNotificationEvents.PIPELINE_EXECUTION_SUCCEEDED
             ]
         )
         
@@ -71,7 +81,7 @@ class CDKCodepipelineStack(Stack):
                 'pip install -r requirements.txt'
             ],
             commands=[
-                'npx cdk synth'
+                f'npx cdk synth --context env={env}'
             ],
             input=git_input)
 
@@ -85,3 +95,8 @@ class CDKCodepipelineStack(Stack):
 
         if env != "dev":
             deployment_wave.add_pre(pipelines.ManualApprovalStep(f"Deploy-to-{env}-env"))
+
+        CfnOutput(self, "ExportTriggerLambdaTopic", value=trigger_lambda_topic.topic_arn,
+            export_name=f"Trigger-Lambda-topic-arn-{env}")
+        CfnOutput(self, "SendingMailTopic", value=sending_mail_toppic.topic_arn,
+            export_name=f"SNS-mailsending-arn-{env}")

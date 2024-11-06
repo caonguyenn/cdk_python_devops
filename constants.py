@@ -18,6 +18,7 @@ class Roles(StrEnum):
     AmazonEC2RoleforAWSCodeDeploy = "arn:aws:iam::730335432746:role/AmazonEC2RoleforAWSCodeDeploy"
     CodeDeployServiceRoleForEC2 = "arn:aws:iam::730335432746:role/CodeDeployServiceRoleForEC2"
     CodebuildRole = "arn:aws:iam::730335432746:role/service-role/codebuild-Tomcatdevbuild-service-role"
+    TriggerLambdaRole = "arn:aws:iam::730335432746:role/service-role/demo-function-role-drrsvvf1"
 
 class Email(StrEnum):
     email = "nguyentancaonguyen@gmail.com"
