@@ -81,7 +81,7 @@ class CDKCodepipelineStack(Stack):
                 'pip install -r requirements.txt'
             ],
             commands=[
-                'npx cdk synth'
+                f'npx cdk synth --context env={env}'
             ],
             input=git_input)
 
